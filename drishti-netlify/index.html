@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drishti – Voice Assistant for the Blind</title>
+<style>
+:root{--bg:#060b1a;--card:#0c1428;--fg:#f1f5f9;--mut:#cbd5e1;--y:#FFD400;--danger:#ff3b30;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari","Noto Sans Gurmukhi",sans-serif}
+body{display:flex;flex-direction:column}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+button:focus-visible{outline:5px solid #00e5ff;outline-offset:2px}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #1e293b}
+.dot{width:12px;height:12px;border-radius:50%;background:#22c55e;flex:none}
+header h1{margin:0;font-size:28px;color:var(--y)}
+.tag{border:1.5px solid var(--y);color:var(--y);border-radius:6px;padding:2px 8px;font-size:13px;font-weight:800;letter-spacing:1px}
+.tag.g{border-color:#14b8a6;color:#5eead4}
+#hl{margin-left:auto;border:1.5px solid #334155;border-radius:999px;padding:10px 16px;font-weight:700;font-size:16px;background:var(--card)}
+main{flex:1;overflow:auto;padding:12px 16px 8px;width:100%;max-width:720px;margin:0 auto}
+#camwrap{position:relative;border-radius:18px;overflow:hidden;background:#000;height:clamp(170px,30vh,300px);border:2px solid #1e293b}
+#camwrap{transition:height .25s ease;cursor:pointer}
+#camwrap.big{height:62vh}
+video{width:100%;height:100%;object-fit:cover}
+#cbar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:8px;background:#0b1224e6;border:1px solid #1e293b;border-radius:12px;padding:8px 10px}
+#status{flex:1;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{border:1.5px solid #334155;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;background:var(--card);white-space:nowrap}
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.tile{position:relative;text-align:left;background:var(--card);border:2.5px solid var(--c);border-radius:18px;padding:14px;min-height:124px;color:var(--c);display:flex;flex-direction:column;justify-content:flex-end;gap:3px}
+.tile .ic{position:absolute;top:10px;left:14px;font-size:34px}
+.tile b{font-size:21px}
+.tile small{color:var(--mut);font-size:14px;line-height:1.25}
+.tile .n{position:absolute;top:10px;right:12px;border:1px solid var(--c);border-radius:6px;padding:0 8px;font-size:14px;font-style:normal}
+.tile:active,.bt:active{filter:brightness(.75);transform:scale(.98)}
+#log{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:2px solid #22d3ee;border-radius:16px;padding:12px 14px}
+.card.w{border-color:var(--y)}
+.ch{display:flex;align-items:center;gap:10px}
+.badge{background:#22d3ee;color:#000;font-weight:800;font-size:13px;border-radius:6px;padding:2px 10px}
+.card.w .badge{background:var(--y)}
+.tm{color:var(--mut);font-size:13px}
+.sp{margin-left:auto;border:1.5px solid var(--y);border-radius:10px;padding:8px 12px;font-size:20px}
+.card p{margin:8px 0 0;font-size:clamp(20px,5vw,26px);font-weight:700;line-height:1.35}
+.note{text-align:center;color:var(--mut);font-size:13px;margin:10px 0}
+#bar{display:flex;flex-wrap:wrap;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #1e293b;background:var(--bg);width:100%;max-width:720px;margin:0 auto}
+.bt{border-radius:16px;font-weight:800;font-size:22px;padding:18px}
+#ba{flex:3;background:linear-gradient(90deg,#eab308,#f59e0b);color:#000;border:2px solid #fde047}
+#bs{order:-1;flex:1 1 100%;background:#b91c1c;color:#fff;border:3px solid #fca5a5;font-size:28px;padding:24px;letter-spacing:2px}
+#sos{position:fixed;inset:0;background:#000;z-index:20;display:none;flex-direction:column;padding:16px;gap:12px;overflow:auto}
+#sos h2{margin:0;text-align:center;font-size:clamp(32px,9vw,46px);color:#ff6b6b}
+.sb{flex:1;min-height:90px;font-size:clamp(26px,7.5vw,40px);font-weight:900;border-radius:20px;padding:12px;text-align:center}
+#sf{background:#25d366;color:#000}
+#sa{background:#fff;color:#b91c1c}
+#sp{background:#2563eb;color:#fff}
+.sm{min-height:56px;font-size:20px;font-weight:700;border:3px solid #64748b;border-radius:14px}
+#br{flex:1.4;background:var(--card);border:2px solid #334155}
+#start{position:fixed;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;padding:16px;gap:12px;overflow:auto}
+#start h2{margin:0;text-align:center;font-size:clamp(32px,9vw,48px);color:var(--y)}
+#start p{margin:0;text-align:center;font-size:20px}
+.lang{flex:1;min-height:84px;font-size:clamp(34px,10vw,56px);font-weight:900;background:var(--y);color:#000;border-radius:20px}
+.lang:nth-of-type(2){background:#fff}
+.lang:nth-of-type(3){background:#111;color:var(--y);border:4px solid var(--y)}
+.tbbtn{min-height:64px;font-size:clamp(18px,5vw,26px);font-weight:800;border:4px dashed #fff;border-radius:20px}
+.tbbtn[aria-pressed=true]{background:#00e5ff;color:#000;border-style:solid}
+#loader{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;font-size:38px;font-weight:800;color:var(--y);z-index:5}
+#loader i{width:110px;height:110px;border-radius:50%;background:var(--y);animation:p 1s infinite ease-in-out}
+@keyframes p{0%,100%{transform:scale(.6);opacity:.6}50%{transform:scale(1);opacity:1}}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (prefers-reduced-motion:reduce){#loader i{animation:none}}
+</style>
+</head>
+<body>
+<div id="start" role="dialog" aria-label="Choose language">
+  <h2>Drishti · दृष्टि</h2>
+  <p>Tap your language · भाषा चुनें · ਭਾਸ਼ਾ ਚੁਣੋ</p>
+  <button class="lang" data-l="hi" aria-label="हिन्दी चुनें">हिन्दी</button>
+  <button class="lang" data-l="pa" aria-label="ਪੰਜਾਬੀ ਚੁਣੋ">ਪੰਜਾਬੀ</button>
+  <button class="lang" data-l="en" aria-label="Choose English">English</button>
+  <button class="tbbtn" id="tb" aria-pressed="false" aria-label="TalkBack mode is off. Double tap to turn on, if you use TalkBack or VoiceOver.">I use TalkBack / VoiceOver</button>
+</div>
+
+<header>
+  <span class="dot" aria-hidden="true"></span>
+  <h1>दृष्टि</h1><span class="tag">DRISHTI</span><span class="tag g">Live</span>
+  <button id="hl" aria-label="Change language">English</button>
+</header>
+
+<main>
+  <section id="camwrap" aria-label="Camera preview">
+    <video id="cam" autoplay playsinline muted aria-hidden="true"></video>
+    <div id="cbar">
+      <span class="dot" aria-hidden="true"></span><span id="status">Ready</span>
+      <button class="mini" id="sw" aria-label="Switch front and back camera">🔄</button>
+    </div>
+  </section>
+
+  <div id="grid">
+    <button class="tile" data-m="around" style="--c:#facc15" aria-label="1. Around me. Danger first, then objects and directions"><span class="ic" aria-hidden="true">👀</span><i class="n" aria-hidden="true">1</i><b>Around Me</b><small>खतरा पहले · ਖ਼ਤਰਾ ਪਹਿਲਾਂ</small></button>
+    <button class="tile" data-m="bus" style="--c:#22d3ee" aria-label="2. Bus and signs. Bus number and destination"><span class="ic" aria-hidden="true">🚌</span><i class="n" aria-hidden="true">2</i><b>Bus &amp; Signs</b><small>बस नंबर · ਬੱਸ ਨੰਬਰ</small></button>
+    <button class="tile" data-m="med" style="--c:#fb7185" aria-label="3. Medicine. Name, expiry and warnings"><span class="ic" aria-hidden="true">💊</span><i class="n" aria-hidden="true">3</i><b>Medicine</b><small>नाम, एक्सपायरी · ਦਵਾਈ</small></button>
+    <button class="tile" data-m="food" style="--c:#4ade80" aria-label="4. Food label. Veg or non veg, expiry, price"><span class="ic" aria-hidden="true">🍪</span><i class="n" aria-hidden="true">4</i><b>Food Label</b><small>वेज/नॉन-वेज, MRP · ਖਾਣਾ</small></button>
+    <button class="tile" data-m="find" style="--c:#fb923c" aria-label="5. Find thing. Chair, plug point or door. Then say what you are looking for"><span class="ic" aria-hidden="true">🔍</span><i class="n" aria-hidden="true">5</i><b>Find Thing</b><small>कुर्सी, प्लग · ਲੱਭੋ</small></button>
+    <button class="tile" data-m="appliance" style="--c:#c084fc" aria-label="6. Appliance. Washing machine or microwave buttons"><span class="ic" aria-hidden="true">🧺</span><i class="n" aria-hidden="true">6</i><b>Appliance</b><small>मशीन के बटन · ਮਸ਼ੀਨ</small></button>
+    <button class="tile" data-m="color" style="--c:#60a5fa" aria-label="7. Colour. Tell the colour"><span class="ic" aria-hidden="true">🎨</span><i class="n" aria-hidden="true">7</i><b>Colour</b><small>रंग बताओ · ਰੰਗ</small></button>
+    <button class="tile" data-m="read" style="--c:#f1f5f9" aria-label="8. Read text. Any sign, label or bill"><span class="ic" aria-hidden="true">📖</span><i class="n" aria-hidden="true">8</i><b>Read Text</b><small>कुछ भी पढ़ो · ਪੜ੍ਹੋ</small></button>
+  </div>
+
+  <div id="log" aria-label="Recent answers"></div>
+  <p class="note">Free · No photos are saved · Keys 1 to 8 work on a computer</p>
+</main>
+
+<nav id="bar" aria-label="Main controls">
+  <button class="bt" id="bs" aria-label="S O S emergency. Double tap to open. Then choose family, ambulance or police">🆘 SOS — EMERGENCY</button>
+  <button class="bt" id="ba" aria-label="Ask a question about the last photo">🎤 Ask (बोलें)</button>
+  <button class="bt" id="br" aria-label="Repeat the last answer">🔁 Repeat</button>
+</nav>
+
+<div id="sos" role="dialog" aria-label="S O S emergency">
+  <h2>🆘 SOS</h2>
+  <button class="sb" id="sf" aria-label="Family. Send my location on WhatsApp to my family">👨‍👩‍👧 Family<br>परिवार · ਪਰਿਵਾਰ</button>
+  <button class="sb" id="sa" aria-label="Ambulance. Call 108">🚑 Ambulance<br>एम्बुलेंस · ਐਂਬੂਲੈਂਸ</button>
+  <button class="sb" id="sp" aria-label="Police. Call 112">🚓 Police<br>पुलिस · ਪੁਲਿਸ</button>
+  <button class="sm" id="sn" aria-label="Change family WhatsApp number">✏️ Family number / नंबर बदलें</button>
+  <button class="sm" id="sc" aria-label="Close S O S, go back">✖ Back / वापस</button>
+</div>
+<div id="live" class="sr" role="alert" aria-live="assertive" aria-atomic="true"></div>
+<div id="loader" aria-hidden="true"><i></i><span id="ltxt">Looking...</span></div>
+
+<script>
+const T={
+ en:{loc:"en-IN",ready:"Drishti is ready. There are eight options: around me, bus and signs, medicine, food label, find thing, appliance, colour, read text. Ask and Repeat are at the bottom.",look:"Looking",listen:"Listening. Ask your question.",nocam:"Camera is not available. Please allow camera permission.",err:"Sorry, something went wrong. Please try again.",noint:"No internet. Please check your connection.",nothing:"There is nothing to repeat yet.",nohear:"I did not hear you. Please try again.",nophoto:"Take a photo first, then ask.",test:"Test photo loaded. Tap an option to use it.",name:"English",label:"English"},
+ hi:{loc:"hi-IN",ready:"दृष्टि तैयार है। आठ विकल्प हैं: आसपास, बस और बोर्ड, दवाई, खाने का लेबल, चीज़ ढूँढो, मशीन, रंग, पढ़ो। नीचे पूछो और दोहराओ हैं।",look:"देख रहा हूँ",listen:"सुन रहा हूँ। अपना सवाल पूछिए।",nocam:"कैमरा उपलब्ध नहीं है। कृपया कैमरे की अनुमति दें।",err:"माफ़ कीजिए, कुछ गड़बड़ हो गई। दोबारा कोशिश करें।",noint:"इंटरनेट नहीं है। कृपया कनेक्शन जाँचें।",nothing:"अभी दोहराने के लिए कुछ नहीं है।",nohear:"मैं सुन नहीं पाया। कृपया दोबारा कोशिश करें।",nophoto:"पहले फ़ोटो लीजिए, फिर सवाल पूछिए।",test:"टेस्ट फ़ोटो लग गई है। कोई विकल्प दबाइए।",name:"Hindi (Devanagari script, simple spoken Hindi)",label:"हिन्दी"},
+ pa:{loc:"pa-IN",ready:"ਦ੍ਰਿਸ਼ਟੀ ਤਿਆਰ ਹੈ। ਅੱਠ ਵਿਕਲਪ ਹਨ: ਆਲੇ-ਦੁਆਲੇ, ਬੱਸ ਅਤੇ ਬੋਰਡ, ਦਵਾਈ, ਖਾਣੇ ਦਾ ਲੇਬਲ, ਚੀਜ਼ ਲੱਭੋ, ਮਸ਼ੀਨ, ਰੰਗ, ਪੜ੍ਹੋ। ਹੇਠਾਂ ਪੁੱਛੋ ਅਤੇ ਦੁਹਰਾਓ ਹਨ।",look:"ਦੇਖ ਰਿਹਾ ਹਾਂ",listen:"ਸੁਣ ਰਿਹਾ ਹਾਂ। ਆਪਣਾ ਸਵਾਲ ਪੁੱਛੋ।",nocam:"ਕੈਮਰਾ ਉਪਲਬਧ ਨਹੀਂ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ।",err:"ਮੁਆਫ਼ ਕਰਨਾ, ਕੁਝ ਗੜਬੜ ਹੋ ਗਈ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",noint:"ਇੰਟਰਨੈੱਟ ਨਹੀਂ ਹੈ। ਕਨੈਕਸ਼ਨ ਚੈੱਕ ਕਰੋ।",nothing:"ਹਾਲੇ ਦੁਹਰਾਉਣ ਲਈ ਕੁਝ ਨਹੀਂ ਹੈ।",nohear:"ਮੈਂ ਸੁਣ ਨਹੀਂ ਸਕਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",nophoto:"ਪਹਿਲਾਂ ਫ਼ੋਟੋ ਲਓ, ਫਿਰ ਸਵਾਲ ਪੁੱਛੋ।",test:"ਟੈਸਟ ਫ਼ੋਟੋ ਲੱਗ ਗਈ ਹੈ। ਕੋਈ ਵਿਕਲਪ ਦਬਾਓ।",name:"Punjabi (Gurmukhi script, simple spoken Punjabi)",label:"ਪੰਜਾਬੀ"}
+};
+const W={en:"What are you looking for? For example chair, plug point or door.",hi:"आप क्या ढूँढ रहे हैं? जैसे कुर्सी, प्लग पॉइंट या दरवाज़ा।",pa:"ਤੁਸੀਂ ਕੀ ਲੱਭ ਰਹੇ ਹੋ? ਜਿਵੇਂ ਕੁਰਸੀ, ਪਲੱਗ ਪੁਆਇੰਟ ਜਾਂ ਦਰਵਾਜ਼ਾ।"};
+let lang="en",last="",lastBlob=null,testBlob=null,busy=false,voices=[],tb=false,facing="environment";
+const $=id=>document.getElementById(id),cam=$("cam");
+const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
+function loadVoices(){voices=speechSynthesis.getVoices()}
+if("speechSynthesis"in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function announce(t){const l=$("live");l.textContent="";setTimeout(()=>{l.textContent=t},60)}
+function addLog(t){
+  const w=/^(warning|alert|चेतावनी|ਸਾਵਧਾਨ|ਚੇਤਾਵਨੀ)/i.test(t);
+  const d=document.createElement("div");d.className="card"+(w?" w":"");
+  const h=document.createElement("div");h.className="ch";
+  const b=document.createElement("span");b.className="badge";b.textContent=w?"ALERT":"ANSWER";
+  const tm=document.createElement("span");tm.className="tm";tm.textContent=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  const sp=document.createElement("button");sp.className="sp";sp.textContent="🔊";sp.setAttribute("aria-label","Speak this answer again");sp.onclick=()=>say(t,false);
+  const p=document.createElement("p");p.textContent=t;
+  h.append(b,tm,sp);d.append(h,p);
+  const L=$("log");L.prepend(d);while(L.children.length>5)L.lastChild.remove();
+  d.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function say(t,show){
+  $("status").textContent=t;
+  if(show)addLog(t);
+  if(tb){announce(t);return}
+  if(!("speechSynthesis"in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t),l=T[lang].loc;
+  u.lang=l;const v=voices.find(v=>v.lang.replace("_","-")===l)||voices.find(v=>v.lang.startsWith(l.slice(0,2)));
+  if(v)u.voice=v;u.rate=.95;speechSynthesis.speak(u);
+}
+async function startCam(){
+  try{
+    if(cam.srcObject)cam.srcObject.getTracks().forEach(t=>t.stop());
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing}},audio:false});
+    cam.srcObject=s;await cam.play();$("status").textContent="Camera ready";
+  }catch(e){say(T[lang].nocam,true)}
+}
+function toBlob(src,w,h){
+  return new Promise((res,rej)=>{
+    const s=1024/Math.max(w,h,1),c=document.createElement("canvas");
+    c.width=Math.round(w*Math.min(s,1));c.height=Math.round(h*Math.min(s,1));
+    c.getContext("2d").drawImage(src,0,0,c.width,c.height);
+    c.toBlob(b=>b?res(b):rej(new Error("blob")),"image/jpeg",.85);
+  });
+}
+async function snap(){
+  if(!cam.videoWidth)throw new Error("nocam");
+  return toBlob(cam,cam.videoWidth,cam.videoHeight);
+}
+function b64(blob){return new Promise((res,rej)=>{const f=new FileReader();f.onload=()=>res(String(f.result).split(",")[1]);f.onerror=()=>rej(new Error("read"));f.readAsDataURL(blob)})}
+async function ask(mode,question){
+  if(busy)return;busy=true;vib(60);
+  $("loader").style.display="flex";$("ltxt").textContent=T[lang].look+"...";
+  if(tb)announce(T[lang].look);
+  try{
+    let blob=lastBlob;
+    if(mode!=="ask"){blob=await snap();lastBlob=blob}
+    if(!blob){say(T[lang].nophoto,true);return}
+    const image=await b64(blob);
+    const r=await fetch("/.netlify/functions/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,mode,lang,question})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.error||("HTTP "+r.status));
+    let txt=(j.text||"").trim();
+    if(/^RETRY:/i.test(txt)){txt=txt.replace(/^RETRY:\s*/i,"");vib([80,60,80])}else vib([120,50,120]);
+    last=txt;say(txt,true);
+  }catch(e){
+    console.error(e);
+    say(!navigator.onLine?T[lang].noint:T[lang].err,true);
+  }finally{busy=false;$("loader").style.display="none"}
+}
+function listenThen(prompt,cb){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){say(T[lang].err,true);return}
+  vib(60);say(prompt,false);
+  setTimeout(()=>{
+    const r=new SR();r.lang=T[lang].loc;r.interimResults=false;
+    r.onresult=e=>cb(e.results[0][0].transcript);
+    r.onerror=()=>say(T[lang].nohear,true);
+    r.onnomatch=()=>say(T[lang].nohear,true);
+    try{r.start()}catch(e){}
+  },tb?4500:3500);
+}
+function pick(m){
+  if(m==="find")listenThen(W[lang],q=>ask("find",q));else ask(m);
+}
+document.querySelectorAll(".tile").forEach(t=>t.onclick=()=>pick(t.dataset.m));
+$("ba").onclick=()=>{if(!lastBlob){say(T[lang].nophoto,true);return}listenThen(T[lang].listen,q=>ask("ask",q))};
+$("br").onclick=()=>{vib(40);last?say(last,true):say(T[lang].nothing,true)};
+$("sw").onclick=()=>{facing=facing==="environment"?"user":"environment";startCam()};
+$("camwrap").onclick=e=>{
+  if(e.target.closest("button"))return;
+  const w=$("camwrap");
+  w.classList.toggle("big");
+  vib(40);
+  if(w.classList.contains("big"))w.scrollIntoView({behavior:"smooth",block:"start"});
+};
+document.querySelectorAll(".lang").forEach(b=>b.onclick=async()=>{
+  lang=b.dataset.l;document.documentElement.lang=lang;vib(80);
+  $("hl").textContent=T[lang].label;$("start").style.display="none";
+  say(T[lang].ready,false);if(!cam.srcObject)await startCam();
+});
+$("hl").onclick=()=>{$("start").style.display="flex"};
+$("tb").onclick=()=>{
+  tb=!tb;vib(80);const b=$("tb");b.setAttribute("aria-pressed",tb);
+  const m=tb?"TalkBack mode is on. Drishti will not speak by itself, your screen reader will read the answers. Now choose your language.":"TalkBack mode is off. Drishti will speak by itself. Now choose your language.";
+  b.setAttribute("aria-label",m.split(". ")[0]+". Double tap to change.");announce(m);
+};
+document.addEventListener("keydown",e=>{
+  if($("sos").style.display==="flex")return;
+  if($("start").style.display!=="none"&&getComputedStyle($("start")).display!=="none")return;
+  const i=parseInt(e.key,10);if(i>=1&&i<=8)document.querySelectorAll(".tile")[i-1].click();
+});
+const SM={
+ en:{menu:"S O S. Three options. Top: Family, sends your location on WhatsApp. Middle: Ambulance, calls 108. Bottom: Police, calls 112. Back is at the very bottom.",fam:"Opening WhatsApp with your location. Press send.",amb:"Calling ambulance, 108.",pol:"Calling police, 112.",saved:"Family number saved. Press Family again.",noc:"No number saved.",back:"Back to home.",msg:"EMERGENCY! I need help. My location:"},
+ hi:{menu:"एस ओ एस। तीन विकल्प। ऊपर: परिवार, व्हाट्सऐप पर आपकी लोकेशन भेजता है। बीच में: एम्बुलेंस, 108 पर कॉल। नीचे: पुलिस, 112 पर कॉल। वापस सबसे नीचे है।",fam:"लोकेशन के साथ व्हाट्सऐप खोल रहा हूँ। भेजें दबाइए।",amb:"एम्बुलेंस, 108 पर कॉल कर रहा हूँ।",pol:"पुलिस, 112 पर कॉल कर रहा हूँ।",saved:"परिवार का नंबर सेव हो गया। अब दोबारा परिवार दबाइए।",noc:"कोई नंबर सेव नहीं है।",back:"वापस होम पर।",msg:"इमरजेंसी! मुझे मदद चाहिए। मेरी लोकेशन:"},
+ pa:{menu:"ਐਸ ਓ ਐਸ। ਤਿੰਨ ਵਿਕਲਪ। ਉੱਪਰ: ਪਰਿਵਾਰ, ਵਟਸਐਪ ਤੇ ਤੁਹਾਡੀ ਲੋਕੇਸ਼ਨ ਭੇਜਦਾ ਹੈ। ਵਿਚਕਾਰ: ਐਂਬੂਲੈਂਸ, 108 ਤੇ ਕਾਲ। ਹੇਠਾਂ: ਪੁਲਿਸ, 112 ਤੇ ਕਾਲ। ਵਾਪਸ ਸਭ ਤੋਂ ਹੇਠਾਂ ਹੈ।",fam:"ਲੋਕੇਸ਼ਨ ਨਾਲ ਵਟਸਐਪ ਖੋਲ੍ਹ ਰਿਹਾ ਹਾਂ। ਭੇਜੋ ਦਬਾਓ।",amb:"ਐਂਬੂਲੈਂਸ, 108 ਤੇ ਕਾਲ ਕਰ ਰਿਹਾ ਹਾਂ।",pol:"ਪੁਲਿਸ, 112 ਤੇ ਕਾਲ ਕਰ ਰਿਹਾ ਹਾਂ।",saved:"ਪਰਿਵਾਰ ਦਾ ਨੰਬਰ ਸੇਵ ਹੋ ਗਿਆ। ਹੁਣ ਦੁਬਾਰਾ ਪਰਿਵਾਰ ਦਬਾਓ।",noc:"ਕੋਈ ਨੰਬਰ ਸੇਵ ਨਹੀਂ ਹੈ।",back:"ਵਾਪਸ ਹੋਮ ਤੇ।",msg:"ਐਮਰਜੈਂਸੀ! ਮੈਨੂੰ ਮਦਦ ਚਾਹੀਦੀ ਹੈ। ਮੇਰੀ ਲੋਕੇਸ਼ਨ:"}
+};
+// === FAMILY NUMBER: yahan apne family ka WhatsApp number likh do (country code ke saath, bina + ya space ke). Example: "919876543210" ===
+const DEFAULT_FAMILY="";
+function getNum(){try{return localStorage.getItem("sosNum")||DEFAULT_FAMILY}catch(e){return DEFAULT_FAMILY}}
+// Ek baar link kholne se number hamesha ke liye save: https://YOURSITE.netlify.app/?family=9876543210
+(function(){
+  try{
+    const f=new URLSearchParams(location.search).get("family");
+    if(f){let c=f.replace(/\D/g,"");if(c.length===10)c="91"+c;
+      if(c.length>=11){localStorage.setItem("sosNum",c);history.replaceState(null,"",location.pathname);$("status").textContent="Family number saved"}}
+    if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+  }catch(e){}
+})();
+function askNum(){
+  const n=prompt("Family WhatsApp number (10 digits) / परिवार का व्हाट्सऐप नंबर",getNum().replace(/^91/,""));
+  if(!n)return "";
+  let c=n.replace(/\D/g,"");if(c.length===10)c="91"+c;
+  if(c.length<11)return "";
+  try{localStorage.setItem("sosNum",c)}catch(e){}
+  return c;
+}
+function sosOpen(){$("sos").style.display="flex";vib(80);say(SM[lang].menu,false);$("sf").focus()}
+function sosClose(){$("sos").style.display="none";vib(40);say(SM[lang].back,false)}
+function sosFamily(){
+  const S=SM[lang];let num=getNum();
+  if(!num){num=askNum();if(!num){say(S.noc,false);return}say(S.saved,false);return}
+  vib([300,100,300,100,300]);say(S.fam,false);
+  const go=l=>{location.href="https://wa.me/"+num+"?text="+encodeURIComponent(S.msg+(l?" "+l:""))};
+  if(!navigator.geolocation){setTimeout(()=>go(""),2500);return}
+  navigator.geolocation.getCurrentPosition(
+    p=>setTimeout(()=>go("https://maps.google.com/?q="+p.coords.latitude+","+p.coords.longitude),1500),
+    ()=>setTimeout(()=>go(""),1500),
+    {enableHighAccuracy:true,timeout:6000,maximumAge:30000}
+  );
+}
+function sosCall(n,msg){vib([300,100,300]);say(msg,false);setTimeout(()=>{location.href="tel:"+n},1800)}
+$("bs").onclick=sosOpen;
+$("sc").onclick=sosClose;
+$("sf").onclick=sosFamily;
+$("sa").onclick=()=>sosCall("108",SM[lang].amb);
+$("sp").onclick=()=>sosCall("112",SM[lang].pol);
+$("sn").onclick=()=>{const c=askNum();say(c?SM[lang].saved:SM[lang].noc,false)};
+</script>
+</body>
+</html>
